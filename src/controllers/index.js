@@ -1,0 +1,1 @@
+module.exports.zoomController = require('./zoom.controller');
