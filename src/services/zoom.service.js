@@ -6,7 +6,7 @@ const createZoomMessage = (githubPayload) => {
     pull_request.user.login ?? "unknown"
   } vừa tạo PR #${number}`;
   let pullRequestTitle = `Tiêu đề: ${pull_request.title ?? "unknown"}`;
-  let pullRequestUrl = `Link: ${pull_request.url ?? "unknown"}`;
+  let pullRequestUrl = `Link: ${pull_request.html_url ?? "unknown"}`;
   pullRequestInfo.messageTitle = messageTitle;
   pullRequestInfo.pullRequestTitle = pullRequestTitle;
   pullRequestInfo.pullRequestUrl = pullRequestUrl;
