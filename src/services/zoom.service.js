@@ -14,6 +14,19 @@ const createZoomMessage = (githubPayload) => {
   return generateZoomMessage(pullRequestInfo);
 };
 
+const createErrorMessage = (errorPayload) => {
+  const { message, file, line } = errorPayload;
+  const errorInfo = {};
+  let errorMessage = `Error: ${message ?? "unknown"}`;
+  let errorFile = `File: ${file ?? "unknown"}`;
+  let errorLine = `Line: ${line ?? "unknown"}`;
+  errorInfo.message = errorMessage;
+  errorInfo.file = errorFile;
+  errorInfo.line = errorLine;
+
+  return generateErrorMessage(errorInfo);
+};
+
 const generateZoomMessage = (pullRequestInfo) => {
   return {
     body: [
@@ -46,6 +59,31 @@ const generateZoomMessage = (pullRequestInfo) => {
   };
 };
 
+const generateErrorMessage = (errorInfo) => {
+  return {
+    body: [
+      {
+        type: "message",
+        text: errorInfo.message,
+        style: {
+          color: "#ff0000",
+          bold: true,
+          italic: false,
+        },
+      },
+      {
+        type: "message",
+        text: errorInfo.file,
+      },
+      {
+        type: "message",
+        text: errorInfo.line,
+      },
+    ],
+  };
+};
+
 module.exports = {
   createZoomMessage,
+  createErrorMessage
 };
