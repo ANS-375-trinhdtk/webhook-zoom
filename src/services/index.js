@@ -1,0 +1,1 @@
+module.exports.zoomService = require('./zoom.service');
