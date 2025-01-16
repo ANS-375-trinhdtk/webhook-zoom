@@ -10,5 +10,8 @@ module.exports = {
   zoom00: {
     url: process.env.ZOOM_00_URL,
     token: process.env.ZOOM_00_TOKEN,
+  },
+  github00: {
+    secret: process.env.GITHUB_00_SECRET,
   }
 };
