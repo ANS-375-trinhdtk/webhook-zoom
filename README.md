@@ -2,10 +2,10 @@
 
 ## Sơ đồ hoạt động
 Hệ thống bao gồm các thành phần:
-1. Incomming Webhook Zoom App
-2. Github webhook
-3. Server trung gian
-4. Hệ thống khác (Laravel Server)
+1. [Incomming Webhook Zoom App](#incomming-webhook-zoom-app)
+2. [Github Webhook](#github-webhook)
+3. [Middleware Server](#middleware-server)
+4. [Third party system](#third-party-system)
 
 ## Incomming Webhook Zoom App
 Ứng dụng Incomming Webhook cho phép bạn gửi trực tiếp tin nhắn từ các dịch vụ bên ngoài đến bất kỳ kênh trò chuyện nào của Zoom. Sử dụng ứng dụng trò chuyện trong bất kỳ kênh nào để tạo endpoint và verification token. Với những thông tin xác thực này, bạn có thể gửi tin nhắn đến kênh trò chuyện Zoom của mình thông qua HTTP POST.
@@ -48,38 +48,43 @@ Khi bạn tạo một webhook, bạn chỉ định một URL và đăng ký nh�
 > Bạn cần quyền quản trị viên đối với repository để thực hiện thao tác này
 
 
-1. Vào repository trên github, click vào mục Setting
-2. Ở menu bên trái, click vào Webhooks
-3. Click vào Add webhook
-4. Ở input "Payload URL", nhập url được public ở Server trung gian. URL này sẽ được trigger bởi Github khi xảy ra sự kiện. 
-5. Phần "Content type", chọn "application/json".
-6. Nhập một random string vào phần "Secret". Mục đích của secret này là để thực hiện việc Authentication ở Server trung gian.\
-※ Chú ý: Lưu trữ "Secret" để cài đặt Authentication trên Server trung gian.
-7. Phần  "Which events would you like to trigger this webhook?", chọn webhook event mà bạn muốn nhận. Chỉ nên chọn event nào bạn muốn nhận để tránh tình trạng spam tin nhắn. \
-Ví dụ: Nếu chỉ muốn nhận thông tin liên quan tới Pull Request, tick vào "Let me select individual events.", rồi chọn mục "Pull requests".
-8. Click "Add webhook" để hoàn thành quá trình tạo Github webhook.
+1. Vào repository trên github, click vào mục **Setting**
+2. Ở menu bên trái, click vào **Webhooks**
+3. Click vào **Add webhook**
+4. Ở input **Payload URL**, nhập url được cung cấp bởi Middleware Server. URL này sẽ được trigger bởi Github khi xảy ra sự kiện. 
+5. Phần **Content type**, chọn **application/json**.
+6. Nhập một random string vào phần **Secret**. Mục đích của secret này là để thực hiện việc Authentication ở Middleware Server.\
+**※ Chú ý:** Lưu trữ "Secret" để cài đặt Authentication trên Middleware Server.
+7. Phần  **"Which events would you like to trigger this webhook?"**, chọn webhook event mà bạn muốn nhận. Chỉ nên chọn event nào bạn muốn nhận để tránh tình trạng spam tin nhắn. \
+Ví dụ: Nếu chỉ muốn nhận thông tin liên quan tới Pull Request, tick vào **Let me select individual events**, rồi chọn mục **Pull requests**.
+8. Click **Add webhook** để hoàn thành quá trình tạo Github webhook.
 
-## Server trung gian
+## Middleware Server
 
-Server trung gian, được viết bằng nodeJS, sẽ nhận request từ các hệ thống muốn gửi tin nhắn (Github, server dự án, ...), thực hiện authentication các request, chuyển đổi sang định dạng tin nhắn Zoom và gọi endpoint của Incomming Webhook Zoom App để gửi tin nhắn. 
+Middleware Server, được viết bằng nodeJS, sẽ nhận request từ các hệ thống muốn gửi tin nhắn (Github, server dự án, ...), thực hiện authentication các request, chuyển đổi sang định dạng tin nhắn Zoom và gọi endpoint của Incomming Webhook Zoom App để gửi tin nhắn. 
 
 ### Cài đặt với Incomming Webhook
 
-Để server trung gian có thể gửi được tin nhắn, thì cần thông tin *endpoint* và *verification token* của Incomming Webhook. Thông tin sẽ được lưu ở file `.env`
+Để Middleware Server có thể gửi được tin nhắn, thì cần thông tin *endpoint* và *verification token* của Incomming Webhook. Thông tin sẽ được lưu ở file `.env`
 
 ```
 ZOOM_00_URL=<your-endpoint>
 ZOOM_00_TOKEN=<your-verification-token>
 ```
 
+#### Styling tin nhắn trên Zoom
+Bạn có thể styling tin nhắn bằng cách nối endpoint với string `?format=full`, và nhập payload theo định dạng của Zoom quy định.
+- Tham khảo file `src/services/zoom.service.js`
+- Xem thêm về cách định dạng tin nhắn của Zoom [tại đây](https://developers.zoom.us/docs/team-chat-apps/customizing-messages/)
+
 ### Cài đặt với Github Webhook
 
-Server trung gian sẽ cung cấp URL với method là POST (tham khảo file `src\routes\v1\zoom.route.js`), cho phép Github Webhook gọi khi xảy ra sự kiện. URL này sẽ được nhập vào input "Payload URL" khi tạo Github Webhook.
+Middleware Server sẽ cung cấp URL với method là POST (tham khảo file `src\routes\v1\zoom.route.js`), cho phép Github Webhook gọi khi xảy ra sự kiện. URL này sẽ được nhập vào input "Payload URL" khi tạo Github Webhook.
 
 #### Authentication Github Request
-Server trung gian sẽ thực hiện việc Authentication request từ Github bằng việc kiểm tra giá trị của `X-Hub-Signature-256` trong request header.
+Middleware Server sẽ thực hiện việc Authentication request từ Github bằng việc kiểm tra giá trị của `X-Hub-Signature-256` trong request header.
 
-Để thực hiện được việc Authentication, Server trung gian cần thông tin Secret (được điền khi tạo Github Webhook) và lưu vào file `.env`
+Để thực hiện được việc Authentication, Middleware Server cần thông tin Secret (được điền khi tạo Github Webhook) và lưu vào file `.env`
 
 ```
 GITHUB_00_SECRET=<your-github-secret>
@@ -93,10 +98,10 @@ Về cách thức Authentication:
 
 ### Cài đặt với hệ thống khác (Laravel Server)
 
-Server trung gian sẽ tạo URL tương ứng cho các hệ thống muốn gửi tin nhắn tới Zoom. 
+Middleware Server sẽ tạo URL tương ứng cho các hệ thống muốn gửi tin nhắn tới Zoom. 
 
 #### Authentication Request
-Server trung gian sẽ sử dụng JWT để authentication các request được gửi. Do đó bạn cần điền giá trị jwt secret vào file `.env`
+Middleware Server sẽ sử dụng JWT để authentication các request được gửi. Do đó bạn cần điền giá trị jwt secret vào file `.env`
 
 ```
 JWT_SECRET=<your-jwt-secret>
@@ -117,11 +122,34 @@ Ghi chú:
 
 ### Deploy với Vercel
 
-Server trung gian cần được deploy lên hệ thống có hỗ trợ SSL, vì thế Vercel được chọn để sử dụng vì các lí do sau:
+Middleware Server cần được deploy lên hệ thống có hỗ trợ SSL, vì thế Vercel được chọn để sử dụng vì các lí do sau:
 - Miễn phí
 - Dễ cài đặt, dễ deploy, có CLI hỗ trợ
 - Cung cấp domain có SSL
 
-> Nếu server mà bạn cài đặt không có SSL, thì bạn có thể chọn **Disable (not recommended)** ở phần **SSL verification** khi cài đặt Github Webhook.
+> Nếu server mà bạn cài đặt không có SSL, bạn có thể chọn **Disable (not recommended)** ở phần **SSL verification** khi cài đặt Github Webhook.
 
 Xem hướng dẫn deploy source NodeJS lên Vercel [tại đây](https://vercel.com/guides/using-express-with-vercel)
+
+## Third party system
+> Tài liệu đang lấy ví dụ khi hệ thống Laravel API Server xảy ra Exception, nội dung exception cần được gửi qua Zoom để developer có thể nắm bắt thông tin
+
+Trong repository của Laravel API Server, thêm URL và JWT_TOKEN được tạo khi cài đặt Middleware Server với hệ thống khác vào file `.env`
+
+```env
+ZOOM_URL=<your-server-url>
+ZOOM_JWT_TOKEN=<your-jwt-toten>
+```
+
+Thêm file `.\Exceptions\Handler.php` như bên như bên dưới
+```php
+public function register()
+{
+    $this->reportable(function (Throwable $e) {
+        //
+        ZoomReporter::report($e);
+    });
+}
+```
+
+Tham khảo code `ZoomReporter.php`tại thư mục `.\php-example`
