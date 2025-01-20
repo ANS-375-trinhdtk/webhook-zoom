@@ -13,5 +13,6 @@ module.exports = {
   },
   github00: {
     secret: process.env.GITHUB_00_SECRET,
-  }
+  },
+  jwtTokenSecret: process.env.JWT_SECRET,
 };
